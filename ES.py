@@ -6,8 +6,8 @@ import random
 
 budget = 5000
 dimension = 50
-mu = 6
-lambda_ = 10
+mu = 10
+lambda_ = 16
 t0 = 1/math.sqrt(mu)
 t_prime = 1/math.sqrt(2 * mu)
 t = 1 / math.sqrt(2 * math.sqrt(mu))
@@ -61,9 +61,15 @@ def discrete_recombination(p1, p2, s1, s2):
 
 
 def intermediate_recombination(p1, p2, s1, s2):
-    offspring_sum = (p1 + p2)
-    offspring = [x//2 for x in offspring_sum]
-    sigma = (s1 + s2) / 2
+    # offspring_sum = (p1 + p2)
+    # offspring = [x/2 for x in offspring_sum]
+    # sigma = (s1 + s2) / 2
+    # return offspring, sigma
+    offspring = [sum(i)/2 for i in zip(p1, p2)]
+    if isinstance(s1, float):
+        sigma = sum([s1, s2]) / 2
+    else:
+        sigma = [sum(i)/len(2) for i in zip(s1, s2)]
     return offspring, sigma
 
 
@@ -123,8 +129,8 @@ def s2566818_s4111753_ES(problem):
         for i in range(lambda_):
             [p1, p2] = random.sample([*range(0, mu - 1)], 2)
             # ind, new_sigma = discrete_recombination(parent[p1], parent[p2], parent_s[p1],  parent_s[p2])
-            # ind, new_sigma = intermediate_recombination(parent[p1], parent[p2], parent_s[p1],  parent_s[p2])
-            ind, new_sigma = global_discrete_recombination(parent, parent_s)
+            ind, new_sigma = intermediate_recombination(parent[p1], parent[p2], parent_s[p1],  parent_s[p2])
+            # ind, new_sigma = global_discrete_recombination(parent, parent_s)
             # ind, new_sigma = global_intermediate_recombination(parent, parent_s_ind)
             offspring.append(ind)
             offspring_s.append(new_sigma)
@@ -152,6 +158,9 @@ def s2566818_s4111753_ES(problem):
         for m in range(mu):
             parent.append(offspring[rank[m]])
             parent_f.append(offspring_f[rank[m]])
+            if parent_f[m] > f_opt:
+                f_opt = parent_f[m]
+                x_opt = parent[m].copy()
             parent_s.append(offspring_s[rank[m]])
 
     # print(f"Optimum: {f_opt}")
@@ -185,15 +194,20 @@ if __name__ == "__main__":
         f_opt = s2566818_s4111753_ES(F18)
         avg.append(f_opt)
         F18.reset() # it is necessary to reset the problem after each independent run
+    _logger.close() # after all runs, it is necessary to close the logger to make sure all data are written to the folder
+    # print(f"F18 avg: {avg}")
+    # print(parent)
     mean = round(sum(avg)/len(avg), 2)
     print(f"The mean optimal value for F18 is: {mean}")
-    _logger.close() # after all runs, it is necessary to close the logger to make sure all data are written to the folder
+    
     avg = []
     F19, _logger = create_problem(19)
     for run in range(20):
         f_opt = s2566818_s4111753_ES(F19)
         avg.append(f_opt)
         F19.reset()
+    _logger.close()
+
+    # print(f"F19 avg: {avg}")
     mean = round(sum(avg)/len(avg), 2)
     print(f"The mean optimal value for F19 is: {mean}")
-    _logger.close()
