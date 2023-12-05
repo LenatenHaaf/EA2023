@@ -14,11 +14,14 @@ from numpy.random import randint
 dimension = 50
 # define the population size
 pop_size = 10
+# number of offspring
+lambda_ = 16
 # mutation rate
 mutation_rate = 1.0 / float(dimension)
 # crossover rate
 crossover_probability = 1 - mutation_rate
 np.random.seed(42)
+random.seed(42)
 
 
 def prop_selection(parent, parent_f):
@@ -32,12 +35,38 @@ def prop_selection(parent, parent_f):
     parent1 = parent[list_parents[rand_digit]]
     return parent1
 
+def proportionalselection(parent, parent_f, c): 
+    offspring = []
+    probability = []
+    # c = min(parent_f) - 0.01
+    # c = 0.1
+    for f in parent_f:
+        if sum(parent_f) > 0:
+            p = (f-c)/(sum(parent_f) - (c*len(parent)))
+            probability.append(p)
+        else:
+            p = -1
+            probability.append(p)
+
+    random_number = random.random() #generate a random number between 0 and 1
+    kans = 0
+    for i in range(len(parent)-1):
+        kans += probability[i] + probability[i+1]
+        if random_number <= probability[0]:
+            offspring = parent[0]
+            break
+        elif random_number <= kans:
+            offspring = parent[i]
+            break
+
+    return offspring
+
 
 # tournament selection
 def tour_selection(parent, parent_f, k=5):
     score = 0
     indiv = 0
-    tour = random.sample(range(0, len(parent) - 1), 5)
+    tour = random.sample(range(0, len(parent) - 1), k)
     for i in tour:
         if parent_f[i] > score:
             score = parent_f[i]
@@ -108,17 +137,22 @@ def s2566818_s4111753_GA(problem):
         for fit in pop:
             pop_f.append(problem(fit))
 
-        # check for new best solution and select parents
-        offspring = []
         for i in range(pop_size):
-            offspring.append(tour_selection(pop, pop_f))
             if pop_f[i] > f_opt:
                 x_opt, f_opt = pop[i], pop_f[i]
-                print(f"{pop[i]}, scores: {pop_f[i]}")
+                # print(f"{pop[i]}, scores: {pop_f[i]}")
+
+        # check for new best solution and select parents
+        offspring = []
+        for i in range(lambda_):
+            # offspring.append(tour_selection(pop, pop_f, k=3))
+            # offspring.append(prop_selection(pop, pop_f))
+            offspring.append(proportionalselection(pop, pop_f, c = (min(pop_f)-0.01))) #(min(pop_f)-0.01)
+            
 
         # create the next generation
-        offspring_c = list()
-        for i in range(0, pop_size, 2):
+        offspring_c = []
+        for i in range(0, lambda_, 2):
             # for c in crossover(p1, p2, crossover_probability):
             for c in uniform_crossover(offspring[i], offspring[i + 1]):
                 # mutation
@@ -127,9 +161,25 @@ def s2566818_s4111753_GA(problem):
                 # store for next generation
                 offspring_c.append(c)
 
-        # replace population
-        pop = offspring_c
+        offspring_f = []
+        for fit in offspring_c:
+            offspring_f.append(problem(fit))
+        
+        # plus selection
+        offspring_f += pop_f
+        offspring_c += pop
+
+        pop = []
+        pop_f = []
+        rank = np.argsort(offspring_f)[::-1]
+        for m in range(pop_size):
+            pop.append(offspring_c[rank[m]])
+            pop_f.append(offspring_f[rank[m]])
+
+
+    # print(f"Function value {f_opt} is the final solution!")
     # no return value needed
+    return f_opt
 
 
 def create_problem(fid: int):
@@ -153,13 +203,21 @@ def create_problem(fid: int):
 if __name__ == "__main__":
     # this how you run your algorithm with 20 repetitions/independent run
     F18, _logger = create_problem(18)
+    opt = []
     for run in range(20): 
-        s2566818_s4111753_GA(F18)
+        f_opt = s2566818_s4111753_GA(F18)
+        opt.append(f_opt)
         F18.reset()
     _logger.close()
+    mean = round(sum(opt)/len(opt), 2)
+    print(f"The mean optimal value for F18 is: {mean}")
 
     F19, _logger = create_problem(19)
+    opt = []
     for run in range(20): 
-        s2566818_s4111753_GA(F19)
+        f_opt =s2566818_s4111753_GA(F19)
+        opt.append(f_opt)
         F19.reset()
     _logger.close()
+    mean = sum(opt)/len(opt)
+    print(f"The mean optimal value for F19 is: {mean}")
