@@ -15,11 +15,11 @@ dimension = 50
 # define the population size
 pop_size = 10
 # number of offspring
-lambda_ = 16
+lambda_ = 20
 # mutation rate
-mutation_rate = 1.0 / float(dimension)
+mutation_rate = 0.05 #1.0 / float(dimension) #0,01-0,1
 # crossover rate
-crossover_probability = 1 - mutation_rate
+crossover_probability = 0.9 #0.9 #0,1 -0,9
 np.random.seed(42)
 random.seed(42)
 
@@ -121,7 +121,7 @@ def mutation(p, mutation_rate):
             p[bit] = 1 - p[bit]
 
 
-def s2566818_s4111753_GA(problem):
+def s2566818_s4111753_GA(problem, selection_method, selection_size):
     budget = 5000
     f_opt = sys.float_info.min
 
@@ -129,7 +129,6 @@ def s2566818_s4111753_GA(problem):
     pop = []
     for p in range(pop_size):
         pop.append(randint(0, 2, dimension).tolist())
-        # we could also subtract from the budget here, but the problem isn't being called
 
     while problem.state.evaluations < budget:
         # evaluate candidates of the populations
@@ -140,21 +139,19 @@ def s2566818_s4111753_GA(problem):
         for i in range(pop_size):
             if pop_f[i] > f_opt:
                 x_opt, f_opt = pop[i], pop_f[i]
-                # print(f"{pop[i]}, scores: {pop_f[i]}")
 
         # check for new best solution and select parents
         offspring = []
-        for i in range(lambda_):
-            # offspring.append(tour_selection(pop, pop_f, k=3))
-            # offspring.append(prop_selection(pop, pop_f))
-            offspring.append(proportionalselection(pop, pop_f, c = (min(pop_f)-0.01))) #(min(pop_f)-0.01)
-            
+        while len(offspring) <= lambda_: # <= or < 
+            if selection_method:
+                offspring.append(proportionalselection(pop, pop_f, c = 0.1)) #(min(pop_f)-0.01)
+            else:
+                offspring.append(proportionalselection(pop, pop_f, c = 0.01))
 
         # create the next generation
         offspring_c = []
         for i in range(0, lambda_, 2):
-            # for c in crossover(p1, p2, crossover_probability):
-            for c in uniform_crossover(offspring[i], offspring[i + 1]):
+            for c in crossover(offspring[i], offspring[i + 1], crossover_probability, n_points=25):
                 # mutation
                 mutation(c, mutation_rate)
 
@@ -166,8 +163,9 @@ def s2566818_s4111753_GA(problem):
             offspring_f.append(problem(fit))
         
         # plus selection
-        offspring_f += pop_f
-        offspring_c += pop
+        if selection_size:
+            offspring_f += pop_f
+            offspring_c += pop
 
         pop = []
         pop_f = []
@@ -176,9 +174,6 @@ def s2566818_s4111753_GA(problem):
             pop.append(offspring_c[rank[m]])
             pop_f.append(offspring_f[rank[m]])
 
-
-    # print(f"Function value {f_opt} is the final solution!")
-    # no return value needed
     return f_opt
 
 
@@ -190,9 +185,9 @@ def create_problem(fid: int):
     # `root` indicates where the output files are stored.
     # `folder_name` is the name of the folder containing all output. You should compress the folder 'run' and upload it to IOHanalyzer.
     l = logger.Analyzer(
-        root="data",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
+        root="finalfinal",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
         folder_name="run",  # the folder name to which the raw performance data will be stored
-        algorithm_name="genetic_algorithm",  # name of your algorithm
+        algorithm_name="GA_F18",  # name of your algorithm
         algorithm_info="Practical assignment of the EA course",
     )
     # attach the logger to the problem
@@ -204,8 +199,10 @@ if __name__ == "__main__":
     # this how you run your algorithm with 20 repetitions/independent run
     F18, _logger = create_problem(18)
     opt = []
+    selection_method = True
+    selection_size = True
     for run in range(20): 
-        f_opt = s2566818_s4111753_GA(F18)
+        f_opt = s2566818_s4111753_GA(F18, selection_method, selection_size)
         opt.append(f_opt)
         F18.reset()
     _logger.close()
@@ -214,8 +211,10 @@ if __name__ == "__main__":
 
     F19, _logger = create_problem(19)
     opt = []
+    selection_method = False
+    selection_size = False
     for run in range(20): 
-        f_opt =s2566818_s4111753_GA(F19)
+        f_opt =s2566818_s4111753_GA(F19, selection_method, selection_size)
         opt.append(f_opt)
         F19.reset()
     _logger.close()
