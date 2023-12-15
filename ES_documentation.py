@@ -45,13 +45,13 @@ def mutation_common(parent, sigma, t0):
 
 def one_step_mutation(parent, sigma_ind, t_prime, t):
     """
-        Function which performs mutation on n sigma with regard to the t. Clipping is used to force the values to be in
+        Function which performs mutation on n sigma with regard to the t and t_prime. Clipping is used to force the values to be in
         between a certain range.
 
         Parameters:
             parent (list): the values from the parent converted to a bit string.
             sigma_ind (list): the values from the parent containing the sigma's.
-            t_prime (float)
+            t_prime (float): the calculated t_prime value.
             t (float): the calculated t value.
 
         Returns:
@@ -85,8 +85,8 @@ def discrete_recombination(p1, p2, s1, s2):
     Parameters:
         p1 (numpy.ndarray): real values of parent 1
         p2 (numpy.ndarray): real values of parent 2
-        s1 (list): converted bit string of parent 1
-        s2 (list): converted bit string of parent 2
+        s1 (list): individual sigma values for parent 1
+        s2 (list): individual sigma values for parent 2
 
     Returns:
         offspring (list): created offspring made by discrete recombination.
@@ -114,8 +114,8 @@ def intermediate_recombination(p1, p2, s1, s2):
         Parameters:
             p1 (numpy.ndarray): real values of parent 1
             p2 (numpy.ndarray): real values of parent 2
-            s1 (list): converted bit string of parent 1
-            s2 (list): converted bit string of parent 2
+            s1 (list): individual sigma values for parent 1
+            s2 (list): individual sigma values for parent 2
 
         Returns:
             offspring (list): created offspring made by discrete recombination.
@@ -135,7 +135,7 @@ def global_discrete_recombination(parent, parent_s):
 
         Parameters:
             parent (list): containing arrays of the real values of the parents.
-            parent_s (list):  containing arrays of the bit strings of the parents.
+            parent_s (list):  individual sigma values for the parents.
 
         Returns:
             offspring (list): created offspring made by discrete recombination.
@@ -158,7 +158,7 @@ def global_intermediate_recombination(parent, parent_s):
 
         Parameters:
             parent (list): containing arrays of the real values of the parents.
-            parent_s (list):  containing arrays of the bit strings of the parents.
+            parent_s (list):  individual sigma values for the parents.
 
         Returns:
             offspring (list): created offspring made by discrete recombination.
@@ -181,7 +181,7 @@ def s2566818_s4111753_ES(problem, crossover, mu, lambda_):
     Parameters:
         problem (ioh.iohcpp.problem.LABS): the problem imported by IOH (is either F18 or F19).
         crossover (bool): boolean which decides the type of recombination used with regard to the problem loaded by IOH.
-        mu (int): amount of parents that needs to be created.
+        mu (int): amount of parents that need to be created.
         lambda_ (int): amount of offspring that needs to be produced.
 
     Returns:
@@ -229,16 +229,15 @@ def s2566818_s4111753_ES(problem, crossover, mu, lambda_):
 
         # mutation
         for i in range(len(offspring)):
-            # offspring[i], offspring_s[i] = mutation_common(offspring[i], offspring_s[i])
             offspring[i], offspring_s[i] = one_step_mutation(offspring[i], offspring_s[i], t_prime, t)
 
         # comma selection
         offspring_f = []
         for i in range(lambda_):
-            # data needs to be normalized first
             scaled = [0 if x < 0 else 1 for x in offspring[i]]
             offspring_f.append(problem(scaled))
 
+        #plus selection
         offspring_f += parent_f
         offspring_s += parent_s
         offspring += parent
@@ -255,7 +254,6 @@ def s2566818_s4111753_ES(problem, crossover, mu, lambda_):
                 x_opt = parent[m].copy()
             parent_s.append(offspring_s[rank[m]])
 
-    # print(f"Optimum: {f_opt}")
     return f_opt
 
 
@@ -279,9 +277,9 @@ def create_problem(fid: int):
     # `root` indicates where the output files are stored.
     # `folder_name` is the name of the folder containing all output. You should compress the folder 'run' and upload it to IOHanalyzer.
     l = logger.Analyzer(
-        root="finalfinal",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
+        root="data",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
         folder_name="run",  # the folder name to which the raw performance data will be stored
-        algorithm_name="ES_F18",  # name of your algorithm
+        algorithm_name="ES_F18_F19",  # name of your algorithm
         algorithm_info="Practical assignment of Lena and Emma",
     )
     # attach the logger to the problem
@@ -290,7 +288,6 @@ def create_problem(fid: int):
 
 
 if __name__ == "__main__":
-    # this how you run your algorithm with 20 repetitions/independent run
     F18, _logger = create_problem(18)
     avg = []
     crossover = True
