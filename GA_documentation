@@ -17,9 +17,9 @@ pop_size = 10
 # number of offspring
 lambda_ = 20
 # mutation rate
-mutation_rate = 0.05 #1.0 / float(dimension) #0,01-0,1
+mutation_rate = 0.05
 # crossover rate
-crossover_probability = 0.9 #0.9 #0,1 -0,9
+crossover_probability = 0.9
 np.random.seed(42)
 random.seed(42)
 
@@ -154,7 +154,6 @@ def uniform_crossover(p1, p2):
     Returns:
         [p1, p2] (list): list containing the two new bit strings generated with crossover.
     """
-    # chance of crossover is 50% (has to be between 0 and 1)
     new_p1 = p1.copy()
     new_p2 = p2.copy()
     for i in range(len(p1)):
@@ -275,9 +274,9 @@ def create_problem(fid: int):
     # `root` indicates where the output files are stored.
     # `folder_name` is the name of the folder containing all output. You should compress the folder 'run' and upload it to IOHanalyzer.
     l = logger.Analyzer(
-        root="finalfinal",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
+        root="data",  # the working directory in which a folder named `folder_name` (the next argument) will be created to store data
         folder_name="run",  # the folder name to which the raw performance data will be stored
-        algorithm_name="GA_F18",  # name of your algorithm
+        algorithm_name="GA_F18_F19",  # name of your algorithm
         algorithm_info="Practical assignment of the EA course",
     )
     # attach the logger to the problem
@@ -286,7 +285,6 @@ def create_problem(fid: int):
 
 
 if __name__ == "__main__":
-    # this how you run your algorithm with 20 repetitions/independent run
     F18, _logger = create_problem(18)
     opt = []
     selection_method = True
